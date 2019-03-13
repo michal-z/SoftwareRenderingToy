@@ -22,4 +22,9 @@ typedef __m256 f32x8;
 typedef __m128d f64x2;
 typedef __m256d f64x4;
 
+typedef struct TSetupInfo
+{
+    u32 WindowSize;
+} TSetupInfo;
+
 f64 GetTime(void);

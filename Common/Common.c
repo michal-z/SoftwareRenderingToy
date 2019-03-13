@@ -93,7 +93,7 @@ static void CALLBACK RenderJob(PTP_CALLBACK_INSTANCE Instance, void *Context, PT
         u32 EndX = BeginX + KTileSize;
         u32 EndY = BeginY + KTileSize;
 
-        Render(&DisplayPtr[(BeginX + BeginY * KWindowSize) * 4], BeginX, BeginY, EndX, EndY);
+        Render(DisplayPtr, BeginX, BeginY, EndX, EndY);
     }
 }
 
