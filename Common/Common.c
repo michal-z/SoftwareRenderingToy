@@ -4,18 +4,16 @@
 #include <windows.h>
 
 
-#define KName "software rendering"
-#define KWindowSize 800
 #define KTileSize 16
-#define KNumTilesPerRow (KWindowSize / KTileSize)
-#define KNumTiles (KNumTilesPerRow * KNumTilesPerRow)
-
 static u32 GTileIndex;
 static u8 *GDisplayPtr;
+u32 GWindowSize;
+f64 GTime;
+f32 GDeltaTime;
+static u32 GNumTiles;
+static u32 GNumTilesPerRow;
 
-void Render(u8 *PixelPtr, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY);
-
-f64 GetTime(void)
+static f64 GetTime(void)
 {
     static LARGE_INTEGER StartCounter;
     static LARGE_INTEGER Frequency;
@@ -85,15 +83,15 @@ static void CALLBACK RenderJob(PTP_CALLBACK_INSTANCE Instance, void *Context, PT
     for (;;)
     {
         u32 TileIndex = (u32)_InterlockedIncrement((volatile LONG *)&GTileIndex) - 1;
-        if (TileIndex >= KNumTiles)
+        if (TileIndex >= GNumTiles)
             break;
 
-        u32 BeginX = (TileIndex % KNumTilesPerRow) * KTileSize;
-        u32 BeginY = (TileIndex / KNumTilesPerRow) * KTileSize;
+        u32 BeginX = (TileIndex % GNumTilesPerRow) * KTileSize;
+        u32 BeginY = (TileIndex / GNumTilesPerRow) * KTileSize;
         u32 EndX = BeginX + KTileSize;
         u32 EndY = BeginY + KTileSize;
 
-        Render(DisplayPtr, BeginX, BeginY, EndX, EndY);
+        RenderTile(DisplayPtr, BeginX, BeginY, EndX, EndY);
     }
 }
 
@@ -101,22 +99,34 @@ i32 main(void)
 {
     SetProcessDPIAware();
 
+	TSetupInfo Info = Setup();
+	assert(Info.Name);
+	assert(Info.WindowSize > 64 && (Info.WindowSize % KTileSize) == 0);
+
+	GWindowSize = Info.WindowSize;
+	GNumTilesPerRow = Info.WindowSize / KTileSize;
+	GNumTiles = GNumTilesPerRow * GNumTilesPerRow;
+
     WNDCLASS Winclass =
     {
         .lpfnWndProc = ProcessWindowMessage,
         .hInstance = GetModuleHandle(NULL),
         .hCursor = LoadCursor(NULL, IDC_ARROW),
-        .lpszClassName = KName
+        .lpszClassName = Info.Name
     };
     if (!RegisterClass(&Winclass))
+	{
         assert(0);
+	}
 
-    RECT Rect = { 0, 0, KWindowSize, KWindowSize };
+    RECT Rect = { 0, 0, Info.WindowSize, Info.WindowSize };
     if (!AdjustWindowRect(&Rect, WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX, 0))
+	{
         assert(0);
+	}
 
     HWND Window = CreateWindowEx(
-        0, KName, KName, WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_VISIBLE,
+        0, Info.Name, Info.Name, WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT,
         Rect.right - Rect.left, Rect.bottom - Rect.top,
         NULL, NULL, NULL, 0);
@@ -131,9 +141,9 @@ i32 main(void)
         .bmiHeader.biPlanes = 1,
         .bmiHeader.biBitCount = 32,
         .bmiHeader.biCompression = BI_RGB,
-        .bmiHeader.biWidth = KWindowSize,
-        .bmiHeader.biHeight = KWindowSize,
-        .bmiHeader.biSizeImage = KWindowSize * KWindowSize
+        .bmiHeader.biWidth = Info.WindowSize,
+        .bmiHeader.biHeight = Info.WindowSize,
+        .bmiHeader.biSizeImage = Info.WindowSize * Info.WindowSize
     };
     HBITMAP BitmapHandle = CreateDIBSection(WindowDc, &BitmapInfo, DIB_RGB_COLORS, (void **)&GDisplayPtr, NULL, 0);
     assert(BitmapHandle);
@@ -156,24 +166,26 @@ i32 main(void)
         {
             DispatchMessage(&Message);
             if (Message.message == WM_QUIT)
+			{
                 break;
+			}
         }
         else
         {
-            f64 Time;
-            f32 DeltaTime;
-            UpdateFrameStats(Window, KName, &Time, &DeltaTime);
+            UpdateFrameStats(Window, Info.Name, &GTime, &GDeltaTime);
 
             GTileIndex = 0;
 
             for (u32 Index = 0; Index < NumCores - 1; ++Index)
+			{
                 SubmitThreadpoolWork(JobHandle);
+			}
 
             RenderJob(NULL, NULL, NULL);
 
             WaitForThreadpoolWorkCallbacks(JobHandle, FALSE);
 
-            BitBlt(WindowDc, 0, 0, KWindowSize, KWindowSize, MemoryDc, 0, 0, SRCCOPY);
+            BitBlt(WindowDc, 0, 0, Info.WindowSize, Info.WindowSize, MemoryDc, 0, 0, SRCCOPY);
         }
     }
 
