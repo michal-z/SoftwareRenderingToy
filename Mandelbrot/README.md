@@ -1,2 +1,2 @@
-![image](/MandelbrotScalar.png)
-![image](/MandelbrotAVX2.png)
+![image](/Mandelbrot/MandelbrotScalar.png)
+![image](/Mandelbrot/MandelbrotAVX2.png)
