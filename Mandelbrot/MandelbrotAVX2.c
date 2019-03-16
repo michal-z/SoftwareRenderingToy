@@ -1,108 +1,6 @@
 #include "Common.h"
 
 
-#if 0
-static __m256d ComputeDistance(__m256d vcx, __m256d vcy, int bailout)
-{
-    ComplexPacket z = { _mm256_setzero_pd(), _mm256_setzero_pd() };
-    ComplexPacket dz = { s_1_0, _mm256_setzero_pd() };
-    __m256d m2, lessMask;
-    do
-    {
-        m2 = _mm256_add_pd(_mm256_mul_pd(z.re, z.re), _mm256_mul_pd(z.im, z.im));
-        lessMask = _mm256_cmp_pd(m2, s_100_0, _CMP_LE_OQ);
-        if (_mm256_movemask_pd(lessMask) == 0)
-            break;
-
-        ComplexPacket dzN = ComplexPacketMul(z, dz);
-        dzN.re = _mm256_add_pd(_mm256_add_pd(dzN.re, dzN.re), s_1_0);
-        dzN.im = _mm256_add_pd(dzN.im, dzN.im);
-
-        ComplexPacket zN = ComplexPacketSqr(z);
-        zN.re = _mm256_add_pd(zN.re, vcx);
-        zN.im = _mm256_add_pd(zN.im, vcy);
-
-        z.re = _mm256_blendv_pd(z.re, zN.re, lessMask);
-        z.im = _mm256_blendv_pd(z.im, zN.im, lessMask);
-        dz.re = _mm256_blendv_pd(dz.re, dzN.re, lessMask);
-        dz.im = _mm256_blendv_pd(dz.im, dzN.im, lessMask);
-    } while (--bailout);
-
-    __declspec(align(32)) double logTemp[4];
-    _mm256_store_pd(logTemp, m2);
-    logTemp[0] = log(logTemp[0]);
-    logTemp[1] = log(logTemp[1]);
-    logTemp[2] = log(logTemp[2]);
-    logTemp[3] = log(logTemp[3]);
-    __m256d logRes = _mm256_load_pd(logTemp);
-
-    __m256d dzDot2 = _mm256_add_pd(_mm256_mul_pd(dz.re, dz.re), _mm256_mul_pd(dz.im, dz.im));
-
-    __m256d dist = _mm256_sqrt_pd(_mm256_div_pd(m2, dzDot2));
-    dist = _mm256_mul_pd(logRes, _mm256_mul_pd(dist, s_0_5));
-
-    return _mm256_andnot_pd(lessMask, dist);
-}
-
-static void DrawTile(Demo *demo, uint32_t tileIndex)
-{
-    uint32_t x0 = (tileIndex % k_NumTilesX) * k_TileSize;
-    uint32_t y0 = (tileIndex / k_NumTilesX) * k_TileSize;
-    uint32_t x1 = x0 + k_TileSize;
-    uint32_t y1 = y0 + k_TileSize;
-    uint8_t *displayPtr = demo->displayPtr;
-
-    __m256d xOffsets = _mm256_set_pd(3.0f, 2.0f, 1.0f, 0.0f);
-    __m256d rcpResX = _mm256_set1_pd(k_DemoRcpResolutionX);
-    __m256d aspectRatio = _mm256_set1_pd(k_DemoAspectRatio);
-    __m256d zoom = _mm256_broadcast_sd(&demo->zoom);
-    __m256d posX = _mm256_broadcast_sd(&demo->position[0]);
-
-    for (uint32_t y = y0; y < y1; ++y)
-    {
-        double cy = 2.0 * (y * k_DemoRcpResolutionY - 0.5);
-        cy = (cy * demo->zoom) - demo->position[1];
-        __m256d vcy = _mm256_broadcast_sd(&cy);
-
-        for (uint32_t x = x0; x < x1; x += 4)
-        {
-            // vcx = 2.0 * (x * k_DemoRcpResolutionX - 0.5) * k_DemoAspectRatio;
-            double xd = (double)x;
-            __m256d vcx = _mm256_add_pd(_mm256_broadcast_sd(&xd), xOffsets);
-            vcx = _mm256_sub_pd(_mm256_mul_pd(vcx, rcpResX), s_0_5);
-            vcx = _mm256_mul_pd(_mm256_add_pd(vcx, vcx), aspectRatio);
-
-            // vcx = (vcx * demo->zoom) - demo->position[0];
-            vcx = _mm256_sub_pd(_mm256_mul_pd(vcx, zoom), posX);
-
-            __m256d d = ComputeDistance(vcx, vcy, 256);
-            d = _mm256_sqrt_pd(_mm256_sqrt_pd(_mm256_div_pd(d, zoom)));
-            d = _mm256_min_pd(d, s_1_0);
-
-            __declspec(align(32)) double ds[4];
-            _mm256_store_pd(ds, d);
-            uint32_t idx = (x + y * k_DemoResolutionX) * 4;
-            displayPtr[idx +  0] = (uint8_t)(255.0 * ds[0]);
-            displayPtr[idx +  1] = (uint8_t)(255.0 * ds[0]);
-            displayPtr[idx +  2] = (uint8_t)(255.0 * ds[0]);
-            displayPtr[idx +  3] = 255;
-            displayPtr[idx +  4] = (uint8_t)(255.0 * ds[1]);
-            displayPtr[idx +  5] = (uint8_t)(255.0 * ds[1]);
-            displayPtr[idx +  6] = (uint8_t)(255.0 * ds[1]);
-            displayPtr[idx +  7] = 255;
-            displayPtr[idx +  8] = (uint8_t)(255.0 * ds[2]);
-            displayPtr[idx +  9] = (uint8_t)(255.0 * ds[2]);
-            displayPtr[idx + 10] = (uint8_t)(255.0 * ds[2]);
-            displayPtr[idx + 11] = 255;
-            displayPtr[idx + 12] = (uint8_t)(255.0 * ds[3]);
-            displayPtr[idx + 13] = (uint8_t)(255.0 * ds[3]);
-            displayPtr[idx + 14] = (uint8_t)(255.0 * ds[3]);
-            displayPtr[idx + 15] = 255;
-        }
-    }
-}
-#endif
-
 typedef struct TComplex
 {
     f32x8 Re;
@@ -112,85 +10,118 @@ typedef struct TComplex
 static FORCEINLINE TComplex CMultiply(TComplex A, TComplex B)
 {
     TComplex AB;
-    AB.Re = f32x8_sub(f32x8_mul(A.Re, B.Re), f32x8_mul(A.Im, B.Im));
-    AB.Im = f32x8_add(f32x8_mul(A.Re, B.Im), f32x8_mul(A.Im, B.Re));
+    AB.Re = _mm256_sub_ps(_mm256_mul_ps(A.Re, B.Re), _mm256_mul_ps(A.Im, B.Im));
+    AB.Im = _mm256_add_ps(_mm256_mul_ps(A.Re, B.Im), _mm256_mul_ps(A.Im, B.Re));
     return AB;
 }
 
 static FORCEINLINE TComplex CSquare(TComplex A)
 {
     TComplex AA;
-    AA.Re = f32x8_sub(f32x8_mul(A.Re, A.Re), f32x8_mul(A.Im, A.Im));
-    AA.Im = f32x8_mul(f32x8_add(A.Re, A.Re), A.Im);
+    AA.Re = _mm256_sub_ps(_mm256_mul_ps(A.Re, A.Re), _mm256_mul_ps(A.Im, A.Im));
+    AA.Im = _mm256_mul_ps(_mm256_add_ps(A.Re, A.Re), A.Im);
     return AA;
 }
 
-static inline f32x8 ComputeDistance(f32x8 Cx, f32x8 Cy, u32 Bailout)
+static inline f32x8 ComputeDistance(f32x8 CX, f32x8 CY)
 {
-    TComplex Z = { f32x8_setzero(), f32x8_setzero() };
-    TComplex DZ = { GF32x8_1_0.V, f32x8_setzero() };
+    TComplex Z = { _mm256_setzero_ps(), _mm256_setzero_ps() };
+    TComplex DZ = { GF32x8_1_0.V, _mm256_setzero_ps() };
 
-    for (u32 Iteration = 0; Iteration < Bailout; ++Iteration)
+    f32x8 Magnitude2, InSetMask;
+
+    for (u32 Iteration = 0; Iteration < 128; ++Iteration)
     {
-        f32x8 Magnitude2 = f32x8_add(f32x8_mul(Z.Re, Z.Re), f32x8_mul(Z.Im, Z.Im));
-        f32x8 LessEqualMask = f32x8_cmple(Magnitude2, GF32x8_100_0);
-        if (f32x8_movemask(LessEqualMask) == 0)
+        Magnitude2 = _mm256_add_ps(_mm256_mul_ps(Z.Re, Z.Re), _mm256_mul_ps(Z.Im, Z.Im));
+        InSetMask = _mm256_cmp_ps(Magnitude2, GF32x8_100_0.V, _CMP_LE_OQ);
+        if (_mm256_movemask_ps(InSetMask) == 0)
         {
             break;
         }
 
         TComplex NewDZ = CMultiply(Z, DZ);
-        NewDZ.Re = f32x8_add(f32x8_add(NewDZ.Re, NewDZ.Re), 1.0f);
-        NewDZ.Im = f32x8_add(NewDZ.Im, NewDZ.Im);
+        NewDZ.Re = _mm256_add_ps(NewDZ.Re, NewDZ.Re);
+        NewDZ.Re = _mm256_add_ps(NewDZ.Re, GF32x8_1_0.V);
+        NewDZ.Im = _mm256_add_ps(NewDZ.Im, NewDZ.Im);
 
         TComplex NewZ = CSquare(Z);
-        NewZ.Re = f32x8_add(NewZ.Re, Cx);
-        NewZ.Im = f32x8_add(NewZ.Im, Cy);
+        NewZ.Re = _mm256_add_ps(NewZ.Re, CX);
+        NewZ.Im = _mm256_add_ps(NewZ.Im, CY);
+
+        Z.Re = _mm256_blendv_ps(Z.Re, NewZ.Re, InSetMask);
+        Z.Im = _mm256_blendv_ps(Z.Im, NewZ.Im, InSetMask);
+
+        DZ.Re = _mm256_blendv_ps(DZ.Re, NewDZ.Re, InSetMask);
+        DZ.Im = _mm256_blendv_ps(DZ.Im, NewDZ.Im, InSetMask);
     }
 
-    // belongs to the set (distance is 0.0f)
-    return f32x8_setzero();
+    f32x8 DZMagnitude2 = _mm256_add_ps(_mm256_mul_ps(DZ.Re, DZ.Re), _mm256_mul_ps(DZ.Im, DZ.Im));
+    f32x8 Magnitude2Log = _mm256_log_ps(Magnitude2);
+
+    f32x8 Distance = _mm256_div_ps(Magnitude2, DZMagnitude2);
+    Distance = _mm256_sqrt_ps(Distance);
+    Distance = _mm256_mul_ps(Distance, GF32x8_0_5.V);
+    Distance = _mm256_mul_ps(Distance, Magnitude2Log);
+
+    // return 0.0f for points in the set
+    // return 'Distance' for points not in the set
+    return _mm256_andnot_ps(InSetMask, Distance);
 }
 
 TSetupInfo Setup(void)
 {
     TSetupInfo Info =
     {
-        .Name = "Mandelbrot",
+        .Name = "MandelbrotAVX2",
         .WindowSize = 800
     };
     return Info;
 }
 
-void RenderTile(u8 *ImagePtr, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY)
+void RenderTile(u8 *Image, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY)
 {
-    f32 ReciprocalWindowSize = 1.0f / GWindowSize;
-    f32 Zoom = 0.8f;
-    f32 PositionX = 0.5f;
-    f32 PositionY = 0.1f;
+    f32x8 ReciprocalWindowSize = _mm256_set1_ps(1.0f / GWindowSize);
+    f32x8 Zoom = _mm256_set1_ps(0.8f);
+    f32x8 PositionX = _mm256_set1_ps(0.5f);
+    f32x8 PositionY = _mm256_set1_ps(0.1f);
 
     for (u32 CurrentY = BeginY; CurrentY < EndY; ++CurrentY)
     {
-        f32 Cy = 2.0f * (CurrentY * ReciprocalWindowSize - 0.5f);
-        Cy = (Cy * Zoom) - PositionY;
+        f32x8 CY = _mm256_set1_ps((f32)CurrentY);
+        CY = _mm256_mul_ps(CY, ReciprocalWindowSize);
+        CY = _mm256_sub_ps(CY, GF32x8_0_5.V);
+        CY = _mm256_add_ps(CY, CY);
 
-        for (u32 CurrentX = BeginX; CurrentX < EndX; ++CurrentX)
+        CY = _mm256_mul_ps(CY, Zoom);
+        CY = _mm256_sub_ps(CY, PositionY);
+
+        for (u32 CurrentX = BeginX; CurrentX < EndX; CurrentX += 8)
         {
-            f32 Cx = 2.0f * (CurrentX * ReciprocalWindowSize - 0.5f);
-            Cx = (Cx * Zoom) - PositionX;
+            f32x8 CX = _mm256_set1_ps((f32)CurrentX);
+            CX = _mm256_add_ps(CX, GF32x8_XCenterOffsets.V);
+            CX = _mm256_mul_ps(CX, ReciprocalWindowSize);
+            CX = _mm256_sub_ps(CX, GF32x8_0_5.V);
+            CX = _mm256_add_ps(CX, CX);
 
-            f32 Distance = ComputeDistance(Cx, Cy, 128);
-            if (Distance > 0.0f)
-            {
-                Distance = sqrtf(sqrtf(Distance / Zoom));
-                Distance = (Distance > 1.0f) ? 1.0f : Distance;
-            }
+            CX = _mm256_mul_ps(CX, Zoom);
+            CX = _mm256_sub_ps(CX, PositionX);
+
+            f32x8 Distance = ComputeDistance(CX, CY);
+            Distance = _mm256_div_ps(Distance, Zoom);
+            Distance = _mm256_sqrt_ps(Distance);
+            Distance = _mm256_sqrt_ps(Distance);
+            Distance = _mm256_min_ps(Distance, GF32x8_1_0.V);
+
+            Distance = _mm256_mul_ps(Distance, GF32x8_255_0.V);
+            i32x8 ColorR = _mm256_cvttps_epi32(Distance);
+            i32x8 ColorG = _mm256_slli_epi32(ColorR, 8);
+            i32x8 ColorB = _mm256_slli_epi32(ColorR, 16);
+
+            i32x8 ColorRGB = _mm256_or_si256(ColorR, ColorG);
+            ColorRGB = _mm256_or_si256(ColorRGB, ColorB);
 
             u32 Index = (CurrentX + CurrentY * GWindowSize) * 4;
-            ImagePtr[Index + 0] = (u8)(255.0f * Distance);
-            ImagePtr[Index + 1] = (u8)(255.0f * Distance);
-            ImagePtr[Index + 2] = (u8)(255.0f * Distance);
-            ImagePtr[Index + 3] = 0xff;
+            _mm256_store_si256((i32x8 *)&Image[Index], ColorRGB);
         }
     }
 }

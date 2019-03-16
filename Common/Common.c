@@ -99,13 +99,13 @@ i32 main(void)
 {
     SetProcessDPIAware();
 
-	TSetupInfo Info = Setup();
-	assert(Info.Name);
-	assert(Info.WindowSize > 64 && (Info.WindowSize % KTileSize) == 0);
+    TSetupInfo Info = Setup();
+    assert(Info.Name);
+    assert(Info.WindowSize > 64 && (Info.WindowSize % KTileSize) == 0);
 
-	GWindowSize = Info.WindowSize;
-	GNumTilesPerRow = Info.WindowSize / KTileSize;
-	GNumTiles = GNumTilesPerRow * GNumTilesPerRow;
+    GWindowSize = Info.WindowSize;
+    GNumTilesPerRow = Info.WindowSize / KTileSize;
+    GNumTiles = GNumTilesPerRow * GNumTilesPerRow;
 
     WNDCLASS Winclass =
     {
@@ -115,15 +115,15 @@ i32 main(void)
         .lpszClassName = Info.Name
     };
     if (!RegisterClass(&Winclass))
-	{
+    {
         assert(0);
-	}
+    }
 
     RECT Rect = { 0, 0, Info.WindowSize, Info.WindowSize };
     if (!AdjustWindowRect(&Rect, WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX, 0))
-	{
+    {
         assert(0);
-	}
+    }
 
     HWND Window = CreateWindowEx(
         0, Info.Name, Info.Name, WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_VISIBLE,
@@ -166,9 +166,9 @@ i32 main(void)
         {
             DispatchMessage(&Message);
             if (Message.message == WM_QUIT)
-			{
+            {
                 break;
-			}
+            }
         }
         else
         {
@@ -177,9 +177,9 @@ i32 main(void)
             GTileIndex = 0;
 
             for (u32 Index = 0; Index < NumCores - 1; ++Index)
-			{
+            {
                 SubmitThreadpoolWork(JobHandle);
-			}
+            }
 
             RenderJob(NULL, NULL, NULL);
 

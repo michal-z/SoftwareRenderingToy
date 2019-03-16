@@ -1,6 +1,5 @@
 #pragma once
 #define _CRT_SECURE_NO_WARNINGS
-#include <stdlib.h>
 #include <math.h>
 #include <assert.h>
 #include <immintrin.h>
@@ -28,7 +27,7 @@ typedef __m256d f64x4;
 
 typedef struct TSetupInfo
 {
-	const char* Name;
+    const char* Name;
     u32 WindowSize;
 } TSetupInfo;
 
@@ -48,13 +47,25 @@ extern f32 GDeltaTime;
 TSetupInfo Setup(void);
 void RenderTile(u8 *ImagePtr, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY);
 
-FORCEINLINE f32x8 f32x8_setzero(void) { return _mm256_setzero_ps(); }
-FORCEINLINE f32x8 f32x8_mul(f32x8 A, f32x8 B) { return _mm256_mul_ps(A, B); }
-FORCEINLINE f32x8 f32x8_add(f32x8 A, f32x8 B) { return _mm256_add_ps(A, B); }
-FORCEINLINE f32x8 f32x8_sub(f32x8 A, f32x8 B) { return _mm256_sub_ps(A, B); }
-FORCEINLINE f32x8 f32x8_blendv(f32x8 A, f32x8 B, f32x8 M) { return _mm256_blendv_ps(A, B, M); }
-#define f32x8_cmple(A, B) _mm256_cmp_ps((A), (B), _CMP_LE_OQ)
-FORCEINLINE i32 f32x8_movemask(f32x8 A) { return _mm256_movemask_ps(A); }
+FORCEINLINE f32x8 _mm256_log_ps(f32x8 A)
+{
+    // MS compiler generates one call to __vdecl_logf8
+    ALIGN(32) f32 Temp[8];
+    _mm256_store_ps(Temp, A);
+    Temp[0] = logf(Temp[0]);
+    Temp[1] = logf(Temp[1]);
+    Temp[2] = logf(Temp[2]);
+    Temp[3] = logf(Temp[3]);
+    Temp[4] = logf(Temp[4]);
+    Temp[5] = logf(Temp[5]);
+    Temp[6] = logf(Temp[6]);
+    Temp[7] = logf(Temp[7]);
+    return _mm256_load_ps(Temp);
+}
 
 GLOBALCONST TF32x8 GF32x8_1_0 = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+GLOBALCONST TF32x8 GF32x8_2_0 = { 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f };
+GLOBALCONST TF32x8 GF32x8_0_5 = { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f };
 GLOBALCONST TF32x8 GF32x8_100_0 = { 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f };
+GLOBALCONST TF32x8 GF32x8_255_0 = { 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f };
+GLOBALCONST TF32x8 GF32x8_XCenterOffsets = { 0.5f, 1.5f, 2.5f, 3.5f, 4.5f, 5.5f, 6.5f, 7.5f };
