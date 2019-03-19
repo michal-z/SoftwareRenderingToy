@@ -174,6 +174,8 @@ i32 main(void)
         {
             UpdateFrameStats(Window, Info.Name, &GTime, &GDeltaTime);
 
+			BeginFrame();
+
             GTileIndex = 0;
 
             for (u32 Index = 0; Index < NumCores - 1; ++Index)

@@ -78,6 +78,10 @@ TSetupInfo Setup(void)
     return Info;
 }
 
+void BeginFrame(void)
+{
+}
+
 void RenderTile(u8 *Image, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY)
 {
     f32x8 ReciprocalWindowSize = _mm256_set1_ps(1.0f / GWindowSize);
