@@ -38,33 +38,33 @@ typedef ALIGN(32) struct TF32x8
     {
         f32 F[8];
         f32x8 V;
-		struct
-		{
-			f32x4 VL;
-			f32x4 VH;
-		};
+        struct
+        {
+            f32x4 VL;
+            f32x4 VH;
+        };
     };
 } TF32x8;
 
 typedef struct TVector2
 {
-	f32 X;
-	f32 Y;
+    f32 X;
+    f32 Y;
 } TVector2;
 
 typedef struct TVector3
 {
-	f32 X;
-	f32 Y;
-	f32 Z;
+    f32 X;
+    f32 Y;
+    f32 Z;
 } TVector3;
 
 typedef struct TVector4
 {
-	f32 X;
-	f32 Y;
-	f32 Z;
-	f32 W;
+    f32 X;
+    f32 Y;
+    f32 Z;
+    f32 W;
 } TVector4;
 
 extern u32 GWindowSize;
@@ -97,81 +97,81 @@ FORCEINLINE f32x8 _mm256_log_ps(f32x8 A)
 
 FORCEINLINE TVector3 Vector3Set(f32 X, f32 Y, f32 Z)
 {
-	TVector3 R = { X, Y, Z };
-	return R;
+    TVector3 R = { X, Y, Z };
+    return R;
 }
 FORCEINLINE TVector4 Vector4Set(f32 X, f32 Y, f32 Z, f32 W)
 {
-	TVector4 R = { X, Y, Z, W };
-	return R;
+    TVector4 R = { X, Y, Z, W };
+    return R;
 }
 
 FORCEINLINE TVector3 Vector3Scale(TVector3 A, f32 B)
 {
-	TVector3 R = { A.X * B, A.Y * B, A.Z * B };
-	return R;
+    TVector3 R = { A.X * B, A.Y * B, A.Z * B };
+    return R;
 }
 FORCEINLINE TVector4 Vector4Scale(TVector4 A, f32 B)
 {
-	TVector4 R = { A.X * B, A.Y * B, A.Z * B, A.W * B };
-	return R;
+    TVector4 R = { A.X * B, A.Y * B, A.Z * B, A.W * B };
+    return R;
 }
 
 FORCEINLINE TVector3 Vector3Add(TVector3 A, TVector3 B)
 {
-	TVector3 R = { A.X + B.X, A.Y + B.Y, A.Z + B.Z };
-	return R;
+    TVector3 R = { A.X + B.X, A.Y + B.Y, A.Z + B.Z };
+    return R;
 }
 FORCEINLINE TVector4 Vector4Add(TVector4 A, TVector4 B)
 {
-	TVector4 R = { A.X + B.X, A.Y + B.Y, A.Z + B.Z, A.W + B.W };
-	return R;
+    TVector4 R = { A.X + B.X, A.Y + B.Y, A.Z + B.Z, A.W + B.W };
+    return R;
 }
 
 FORCEINLINE TVector3 Vector3Subtract(TVector3 A, TVector3 B)
 {
-	TVector3 R = { A.X - B.X, A.Y - B.Y, A.Z - B.Z };
-	return R;
+    TVector3 R = { A.X - B.X, A.Y - B.Y, A.Z - B.Z };
+    return R;
 }
 
 FORCEINLINE f32 Vector3Dot(TVector3 A, TVector3 B)
 {
-	return A.X * B.X + A.Y * B.Y + A.Z * B.Z;
+    return A.X * B.X + A.Y * B.Y + A.Z * B.Z;
 }
 FORCEINLINE f32 Vector4Dot(TVector4 A, TVector4 B)
 {
-	return A.X * B.X + A.Y * B.Y + A.Z * B.Z + A.W * B.W;
+    return A.X * B.X + A.Y * B.Y + A.Z * B.Z + A.W * B.W;
 }
 
 FORCEINLINE f32 Vector3Length(TVector3 A)
 {
-	return sqrtf(Vector3Dot(A, A));
+    return sqrtf(Vector3Dot(A, A));
 }
 FORCEINLINE f32 Vector4Length(TVector4 A)
 {
-	return sqrtf(Vector4Dot(A, A));
+    return sqrtf(Vector4Dot(A, A));
 }
 
 FORCEINLINE TVector3 Vector3Normalize(TVector3 A)
 {
-	f32 Length = Vector3Length(A);
-	assert(Length != 0.0f);
-	f32 ReciprocalLength = 1.0f / Length;
-	return Vector3Scale(A, ReciprocalLength);
+    f32 Length = Vector3Length(A);
+    assert(Length != 0.0f);
+    f32 ReciprocalLength = 1.0f / Length;
+    return Vector3Scale(A, ReciprocalLength);
 }
 
 FORCEINLINE TVector3 Vector3Cross(TVector3 A, TVector3 B)
 {
-	TVector3 R;
-	R.X = A.Y * B.Z - A.Z * B.Y;
-	R.Y = A.Z * B.X - A.X * B.Z;
-	R.Z = A.X * B.Y - A.Y * B.X;
-	return R;
+    TVector3 R;
+    R.X = A.Y * B.Z - A.Z * B.Y;
+    R.Y = A.Z * B.X - A.X * B.Z;
+    R.Z = A.X * B.Y - A.Y * B.X;
+    return R;
 }
 
 FORCEINLINE f32 Vector3Distance(TVector3 A, TVector3 B)
 {
-	return Vector3Length(Vector3Subtract(A, B));
+    return Vector3Length(Vector3Subtract(A, B));
 }
 
 GLOBALCONST TF32x8 GF32x8_1_0 = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
