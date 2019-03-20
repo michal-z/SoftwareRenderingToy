@@ -32,7 +32,7 @@ typedef struct TSetupInfo
     u32 WindowSize;
 } TSetupInfo;
 
-typedef ALIGN(32) struct TF32x8
+typedef ALIGN(32) struct TF32X8
 {
     union
     {
@@ -44,7 +44,7 @@ typedef ALIGN(32) struct TF32x8
             f32x4 VH;
         };
     };
-} TF32x8;
+} TF32X8;
 
 typedef struct TVector2
 {
@@ -66,6 +66,27 @@ typedef struct TVector4
     f32 Z;
     f32 W;
 } TVector4;
+
+typedef ALIGN(32) struct TVector2X8
+{
+    f32x8 X;
+    f32x8 Y;
+} TVector2X8;
+
+typedef ALIGN(32) struct TVector3X8
+{
+    f32x8 X;
+    f32x8 Y;
+    f32x8 Z;
+} TVector3X8;
+
+typedef ALIGN(32) struct TVector4X8
+{
+    f32x8 X;
+    f32x8 Y;
+    f32x8 Z;
+    f32x8 W;
+} TVector4X8;
 
 extern u32 GWindowSize;
 extern f64 GTime;
@@ -193,18 +214,18 @@ FORCEINLINE f32 Vector3Distance(TVector3 A, TVector3 B)
     return Vector3Length(Vector3Subtract(A, B));
 }
 
-GLOBALCONST TF32x8 GF32x8_1_0 = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
-GLOBALCONST TF32x8 GF32x8_2_0 = { 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f };
-GLOBALCONST TF32x8 GF32x8_0_5 = { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f };
-GLOBALCONST TF32x8 GF32x8_100_0 = { 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f };
-GLOBALCONST TF32x8 GF32x8_255_0 = { 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f };
-GLOBALCONST TF32x8 GF32x8_XCenterOffsets = { 0.5f, 1.5f, 2.5f, 3.5f, 4.5f, 5.5f, 6.5f, 7.5f };
+GLOBALCONST TF32X8 GF32X8_1_0 = { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f };
+GLOBALCONST TF32X8 GF32X8_2_0 = { 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f, 2.0f };
+GLOBALCONST TF32X8 GF32X8_0_5 = { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f };
+GLOBALCONST TF32X8 GF32X8_100_0 = { 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f };
+GLOBALCONST TF32X8 GF32X8_255_0 = { 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f };
+GLOBALCONST TF32X8 GF32X8_XCenterOffsets = { 0.5f, 1.5f, 2.5f, 3.5f, 4.5f, 5.5f, 6.5f, 7.5f };
 
 FORCEINLINE f32 F32Saturate(f32 A)
 {
     f32x4 VA = _mm_load_ss(&A);
     VA = _mm_max_ss(VA, _mm_setzero_ps());
-    VA = _mm_min_ss(VA, GF32x8_1_0.VL);
+    VA = _mm_min_ss(VA, GF32X8_1_0.VL);
     _mm_store_ss(&A, VA);
     return A;
 }
