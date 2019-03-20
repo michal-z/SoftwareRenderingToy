@@ -10,7 +10,7 @@ set CFLAGS=/Zi /I..\Common /nologo /W4 /EHa- /arch:AVX2 /wd4204 /wd4201
 set DEBUG=/Od /D_DEBUG
 set RELEASE=/O2 /fp:fast /DNDEBUG
 
-if not defined CONFIG set CONFIG=%DEBUG%
+if not defined CONFIG set CONFIG=%RELEASE%
 
 if exist *.exe del *.exe
 

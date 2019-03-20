@@ -5,6 +5,7 @@
 #define KMaxDistance 20.0f
 #define KEscapeThreshold 10.0f
 #define KEpsilon 0.001f
+#define KMaxNumIterations 12
 static TVector3 GViewTransform[3];
 static TVector3 GEyePosition = { 0.0f, 0.0f, 2.1f };
 static TVector4 GQuaternion = { 0.6f, 0.2f, 0.2f, -0.2f };
@@ -40,7 +41,7 @@ FORCEINLINE static TVector3 ComputeNormalVector(TVector3 Position)
     TVector4 GZ0 = Vector4Add(QP, Vector4Set(0.0f, -KEpsilon, 0.0f, 0.0f));
     TVector4 GZ1 = Vector4Add(QP, Vector4Set(0.0f, KEpsilon, 0.0f, 0.0f));
 
-    for (u32 Iteration = 0; Iteration < 10; ++Iteration)
+    for (u32 Iteration = 0; Iteration < KMaxNumIterations; ++Iteration)
     {
         GX0 = Vector4Add(QuaternionSquare(GX0), GQuaternion);
         GX1 = Vector4Add(QuaternionSquare(GX1), GQuaternion);
@@ -63,7 +64,7 @@ FORCEINLINE static f32 ComputeDistance(TVector3 Position)
     TVector4 QP = { 0.0f, 0.0f, 0.0f, 1.0f };
     f32 Magnitude2;
 
-    for (u32 Iteration = 0; Iteration < 10; ++Iteration)
+    for (u32 Iteration = 0; Iteration < KMaxNumIterations; ++Iteration)
     {
         QP = Vector4Scale(QuaternionMultiply(Q, QP), 2.0f);
         Q = Vector4Add(QuaternionSquare(Q), GQuaternion);
@@ -83,7 +84,7 @@ FORCEINLINE static b32 CastRay(TVector3 RayOrigin, TVector3 RayDirection, TVecto
 {
     f32 MarchedDistance = 1.0f;
 
-    for (u32 Iteration = 0; Iteration < 128; ++Iteration)
+    for (u32 Iteration = 0; Iteration < 1024; ++Iteration)
     {
         *Position = Vector3Add(Vector3Scale(RayDirection, MarchedDistance), RayOrigin);
 
@@ -117,6 +118,8 @@ void BeginFrame(void)
 {
     TVector3 LookAtPosition = { 0.0f, 0.0f, 0.0f };
     TVector3 UpVector = { 0.0f, 1.0f, 0.0f };
+
+    GQuaternion.Y = (f32)sin(GTime * 0.1);
 
     TVector3 ZAxis = Vector3Normalize(Vector3Subtract(GEyePosition, LookAtPosition));
     TVector3 XAxis = Vector3Normalize(Vector3Cross(UpVector, ZAxis));
