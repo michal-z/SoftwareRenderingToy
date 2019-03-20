@@ -2,6 +2,7 @@
 setlocal
 setlocal enableextensions
 
+::set NAME=Mandelbrot
 set NAME=MandelbrotAVX2
 
 if "%1" == "clean" if exist Common.pch del Common.pch

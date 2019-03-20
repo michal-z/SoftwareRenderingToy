@@ -95,6 +95,11 @@ FORCEINLINE f32x8 _mm256_log_ps(f32x8 A)
 #endif
 #endif
 
+FORCEINLINE TVector2 Vector2Set(f32 X, f32 Y)
+{
+    TVector2 R = { X, Y};
+    return R;
+}
 FORCEINLINE TVector3 Vector3Set(f32 X, f32 Y, f32 Z)
 {
     TVector3 R = { X, Y, Z };
@@ -106,6 +111,11 @@ FORCEINLINE TVector4 Vector4Set(f32 X, f32 Y, f32 Z, f32 W)
     return R;
 }
 
+FORCEINLINE TVector2 Vector2Scale(TVector2 A, f32 B)
+{
+    TVector2 R = { A.X * B, A.Y * B };
+    return R;
+}
 FORCEINLINE TVector3 Vector3Scale(TVector3 A, f32 B)
 {
     TVector3 R = { A.X * B, A.Y * B, A.Z * B };
@@ -117,6 +127,11 @@ FORCEINLINE TVector4 Vector4Scale(TVector4 A, f32 B)
     return R;
 }
 
+FORCEINLINE TVector2 Vector2Add(TVector2 A, TVector2 B)
+{
+    TVector2 R = { A.X + B.X, A.Y + B.Y };
+    return R;
+}
 FORCEINLINE TVector3 Vector3Add(TVector3 A, TVector3 B)
 {
     TVector3 R = { A.X + B.X, A.Y + B.Y, A.Z + B.Z };
@@ -134,6 +149,10 @@ FORCEINLINE TVector3 Vector3Subtract(TVector3 A, TVector3 B)
     return R;
 }
 
+FORCEINLINE f32 Vector2Dot(TVector2 A, TVector2 B)
+{
+    return A.X * B.X + A.Y * B.Y;
+}
 FORCEINLINE f32 Vector3Dot(TVector3 A, TVector3 B)
 {
     return A.X * B.X + A.Y * B.Y + A.Z * B.Z;
@@ -180,3 +199,18 @@ GLOBALCONST TF32x8 GF32x8_0_5 = { 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f
 GLOBALCONST TF32x8 GF32x8_100_0 = { 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f, 100.0f };
 GLOBALCONST TF32x8 GF32x8_255_0 = { 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f, 255.0f };
 GLOBALCONST TF32x8 GF32x8_XCenterOffsets = { 0.5f, 1.5f, 2.5f, 3.5f, 4.5f, 5.5f, 6.5f, 7.5f };
+
+FORCEINLINE f32 F32Saturate(f32 A)
+{
+    f32x4 VA = _mm_load_ss(&A);
+    VA = _mm_max_ss(VA, _mm_setzero_ps());
+    VA = _mm_min_ss(VA, GF32x8_1_0.VL);
+    _mm_store_ss(&A, VA);
+    return A;
+}
+
+FORCEINLINE TVector3 Vector3Saturate(TVector3 A)
+{
+    TVector3 R = { F32Saturate(A.X), F32Saturate(A.Y), F32Saturate(A.Z) };
+    return R;
+}

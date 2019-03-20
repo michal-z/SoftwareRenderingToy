@@ -150,16 +150,8 @@ void RenderTile(u8 *Image, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY)
             TVector3 HitPosition;
             if (CastRay(RayOrigin, RayDirection, &HitPosition))
             {
-                Color = ComputeNormalVector(HitPosition);
+                Color = Vector3Saturate(ComputeNormalVector(HitPosition));
             }
-
-            _mm_store_ss(&Color.X, _mm_max_ss(_mm_load_ss(&Color.X), _mm_setzero_ps()));
-            _mm_store_ss(&Color.Y, _mm_max_ss(_mm_load_ss(&Color.Y), _mm_setzero_ps()));
-            _mm_store_ss(&Color.Z, _mm_max_ss(_mm_load_ss(&Color.Z), _mm_setzero_ps()));
-
-            _mm_store_ss(&Color.X, _mm_min_ss(_mm_load_ss(&Color.X), GF32x8_1_0.VL));
-            _mm_store_ss(&Color.Y, _mm_min_ss(_mm_load_ss(&Color.Y), GF32x8_1_0.VL));
-            _mm_store_ss(&Color.Z, _mm_min_ss(_mm_load_ss(&Color.Z), GF32x8_1_0.VL));
 
             u32 Index = (CurrentX + CurrentY * GWindowSize) * 4;
             Image[Index + 0] = (u8)(255.0f * Color.Z);

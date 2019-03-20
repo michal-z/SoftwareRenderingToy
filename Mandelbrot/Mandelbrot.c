@@ -1,44 +1,35 @@
 #include "Common.h"
 
 
-typedef struct TComplex
+static FORCEINLINE TVector2 ComplexMultiply(TVector2 A, TVector2 B)
 {
-    f32 Re;
-    f32 Im;
-} TComplex;
-
-static FORCEINLINE TComplex CMultiply(TComplex A, TComplex B)
-{
-    TComplex AB = { A.Re * B.Re - A.Im * B.Im, A.Re * B.Im + A.Im * B.Re };
-    return AB;
+    TVector2 R = { A.X * B.X - A.Y * B.Y, A.X * B.Y + A.Y * B.X };
+    return R;
 }
 
-static FORCEINLINE TComplex CSquare(TComplex A)
+static FORCEINLINE TVector2 ComplexSquare(TVector2 A)
 {
-    TComplex AA = { A.Re * A.Re - A.Im * A.Im, 2.0f * A.Re * A.Im };
-    return AA;
+    TVector2 R = { A.X * A.X - A.Y * A.Y, 2.0f * A.X * A.Y };
+    return R;
 }
 
-static inline f32 ComputeDistance(f32 CX, f32 CY)
+static FORCEINLINE f32 ComputeDistance(f32 CX, f32 CY)
 {
-    TComplex Z = { 0.0f, 0.0f };
-    TComplex DZ = { 1.0f, 0.0f };
+    TVector2 Z = { 0.0f, 0.0f };
+    TVector2 DZ = { 1.0f, 0.0f };
 
     for (u32 Iteration = 0; Iteration < 128; ++Iteration)
     {
-        DZ = CMultiply(Z, DZ);
-        DZ.Re = DZ.Re + DZ.Re + 1.0f;
-        DZ.Im = DZ.Im + DZ.Im;
+        DZ = Vector2Scale(ComplexMultiply(Z, DZ), 2.0f);
+        DZ.X += 1.0f;
 
-        Z = CSquare(Z);
-        Z.Re += CX;
-        Z.Im += CY;
+        Z = Vector2Add(ComplexSquare(Z), Vector2Set(CX, CY));
 
-        f32 Magnitude2 = Z.Re * Z.Re + Z.Im * Z.Im;
+        f32 Magnitude2 = Vector2Dot(Z, Z);
         if (Magnitude2 > 100.0f)
         {
             // goes to infinity, does not belong to the Mandelbrot set, estimate the distance to the set
-            return sqrtf(Magnitude2 / (DZ.Re * DZ.Re + DZ.Im * DZ.Im)) * 0.5f * logf(Magnitude2);
+            return sqrtf(Magnitude2 / Vector2Dot(DZ, DZ)) * 0.5f * logf(Magnitude2);
         }
     }
 
