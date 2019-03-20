@@ -12,7 +12,7 @@ set RELEASE=/O2 /fp:fast /DNDEBUG
 
 if not defined CONFIG set CONFIG=%DEBUG%
 
-if exist %NAME%.exe del %NAME%.exe
+if exist *.exe del *.exe
 
 if not exist Common.pch (cl %CONFIG% %CFLAGS% /c /YcCommon.h ..\Common\Common.c)
 if ERRORLEVEL 1 goto :end
@@ -25,4 +25,5 @@ if ERRORLEVEL 1 goto :end
 
 :end
 if exist %NAME%.obj del %NAME%.obj
+if exist %NAME%AVX2.obj del %NAME%AVX2.obj
 if "%1" == "run" if exist %NAME%.exe %NAME%.exe
