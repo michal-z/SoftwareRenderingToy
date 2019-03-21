@@ -232,26 +232,26 @@ FORCEINLINE f32 F32Saturate(f32 A)
 
 FORCEINLINE f32 F32Min(f32 A, f32 B)
 {
-	f32x4 VA = _mm_load_ss(&A);
-	f32x4 VB = _mm_load_ss(&B);
-	_mm_store_ss(&A, _mm_min_ss(VA, VB));
-	return A;
+    f32x4 VA = _mm_load_ss(&A);
+    f32x4 VB = _mm_load_ss(&B);
+    _mm_store_ss(&A, _mm_min_ss(VA, VB));
+    return A;
 }
 
 FORCEINLINE f32 F32Max(f32 A, f32 B)
 {
-	f32x4 VA = _mm_load_ss(&A);
-	f32x4 VB = _mm_load_ss(&B);
-	_mm_store_ss(&A, _mm_max_ss(VA, VB));
-	return A;
+    f32x4 VA = _mm_load_ss(&A);
+    f32x4 VB = _mm_load_ss(&B);
+    _mm_store_ss(&A, _mm_max_ss(VA, VB));
+    return A;
 }
 
 FORCEINLINE f32 F32Abs(f32 A)
 {
     f32x4 VA = _mm_load_ss(&A);
-	VA = _mm_max_ss(_mm_sub_ss(_mm_setzero_ps(), VA), VA);
-	_mm_store_ss(&A, VA);
-	return A;
+    VA = _mm_max_ss(_mm_sub_ss(_mm_setzero_ps(), VA), VA);
+    _mm_store_ss(&A, VA);
+    return A;
 }
 
 FORCEINLINE TVector3 Vector3Saturate(TVector3 A)
