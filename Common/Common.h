@@ -230,8 +230,38 @@ FORCEINLINE f32 F32Saturate(f32 A)
     return A;
 }
 
+FORCEINLINE f32 F32Min(f32 A, f32 B)
+{
+	f32x4 VA = _mm_load_ss(&A);
+	f32x4 VB = _mm_load_ss(&B);
+	_mm_store_ss(&A, _mm_min_ss(VA, VB));
+	return A;
+}
+
+FORCEINLINE f32 F32Max(f32 A, f32 B)
+{
+	f32x4 VA = _mm_load_ss(&A);
+	f32x4 VB = _mm_load_ss(&B);
+	_mm_store_ss(&A, _mm_max_ss(VA, VB));
+	return A;
+}
+
+FORCEINLINE f32 F32Abs(f32 A)
+{
+    f32x4 VA = _mm_load_ss(&A);
+	VA = _mm_max_ss(_mm_sub_ss(_mm_setzero_ps(), VA), VA);
+	_mm_store_ss(&A, VA);
+	return A;
+}
+
 FORCEINLINE TVector3 Vector3Saturate(TVector3 A)
 {
     TVector3 R = { F32Saturate(A.X), F32Saturate(A.Y), F32Saturate(A.Z) };
+    return R;
+}
+
+FORCEINLINE TVector3 Vector3Abs(TVector3 A)
+{
+    TVector3 R = { F32Abs(A.X), F32Abs(A.Y), F32Abs(A.Z) };
     return R;
 }

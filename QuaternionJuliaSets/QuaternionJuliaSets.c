@@ -2,11 +2,10 @@
 
 
 #define KHitDistance 0.001f
-#define KMaxDistance 20.0f
+#define KMaxDistance 10.0f
 #define KEscapeThreshold 10.0f
 #define KEpsilon 0.001f
-#define KMaxNumIterations 12
-static TVector3 GViewTransform[3];
+#define KMaxNumIterations 10
 static TVector3 GEyePosition = { 0.0f, 0.0f, 2.1f };
 static TVector4 GQuaternion = { 0.6f, 0.2f, 0.2f, -0.2f };
 
@@ -116,18 +115,8 @@ TSetupInfo Setup(void)
 
 void BeginFrame(void)
 {
-    TVector3 LookAtPosition = { 0.0f, 0.0f, 0.0f };
-    TVector3 UpVector = { 0.0f, 1.0f, 0.0f };
-
-    GQuaternion.Y = (f32)sin(GTime * 0.1);
-
-    TVector3 ZAxis = Vector3Normalize(Vector3Subtract(GEyePosition, LookAtPosition));
-    TVector3 XAxis = Vector3Normalize(Vector3Cross(UpVector, ZAxis));
-    TVector3 YAxis = Vector3Normalize(Vector3Cross(ZAxis, XAxis));
-
-    GViewTransform[0] = Vector3Set(XAxis.X, YAxis.X, ZAxis.X);
-    GViewTransform[1] = Vector3Set(XAxis.Y, YAxis.Y, ZAxis.Y);
-    GViewTransform[2] = Vector3Set(XAxis.Z, YAxis.Z, ZAxis.Z);
+    GQuaternion.X = 0.75f * (f32)sin(GTime * 0.1);
+    GQuaternion.Y = 0.5f * (f32)sin(GTime * 0.2);
 }
 
 void RenderTile(u8 *Image, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY)
@@ -144,16 +133,23 @@ void RenderTile(u8 *Image, u32 BeginX, u32 BeginY, u32 EndX, u32 EndY)
             f32 X = 2.0f * (CurrentX * ReciprocalWindowSize - 0.5f);
 
             TVector3 RayDirection = { X, Y, -1.5f };
-            RayDirection.X = Vector3Dot(RayDirection, GViewTransform[0]);
-            RayDirection.Y = Vector3Dot(RayDirection, GViewTransform[1]);
-            RayDirection.Z = Vector3Dot(RayDirection, GViewTransform[2]);
             RayDirection = Vector3Normalize(RayDirection);
 
             TVector3 Color = { 0 };
             TVector3 HitPosition;
             if (CastRay(RayOrigin, RayDirection, &HitPosition))
             {
-                Color = Vector3Saturate(ComputeNormalVector(HitPosition));
+                TVector3 LightPosition = { 10.0, 10.0f, 10.0f };
+                TVector3 LightDiffuse = { 0.25f, 0.45f, 1.0f };
+
+                TVector3 N = ComputeNormalVector(HitPosition);
+                TVector3 L = Vector3Normalize(Vector3Subtract(LightPosition, HitPosition));
+                f32 NDotL = F32Max(Vector3Dot(N, L), 0.0f);
+
+                LightDiffuse = Vector3Add(Vector3Scale(N, 0.3f), LightDiffuse);
+                LightDiffuse = Vector3Saturate(LightDiffuse);
+
+                Color = Vector3Scale(LightDiffuse, NDotL);
             }
 
             u32 Index = (CurrentX + CurrentY * GWindowSize) * 4;
